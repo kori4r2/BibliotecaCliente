@@ -5,6 +5,37 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 public class Interface extends JFrame implements ActionListener{
+	public class answerGetter extends Thread{
+		public void run(){
+			String answer = new String("");
+			try{
+				while(server.hasNextLine() && !endTest){
+					lastLine = server.nextLine();
+					System.out.println(lastLine);
+					if(lastLine.equals("disconnect")){
+						disconnect();
+						return;
+					}
+					//System.out.println(lastLine);
+					commandReceived = true;
+					commandProcessed = false;
+//					while(!commandProcessed){
+//					}
+				}
+			}catch(Exception e){
+			}
+		}
+	}
+	private Socket client;
+	public volatile boolean endTest;
+	private PrintStream saida;
+	private Scanner entrada;
+	private Scanner server;
+	public volatile String lastLine;
+	private answerGetter read;
+	private volatile boolean commandReceived;
+	private volatile boolean commandProcessed;
+
 	private JFrame frame;
 	private JButton but;
 	
@@ -23,10 +54,37 @@ public class Interface extends JFrame implements ActionListener{
 	
 	private JTextField senha;
 	private JTextField senha2;
+
+	// Funcoes de comunicacao
+	// Envia uma string para o servidor
+	public void sendCommand(String s){
+		saida.println(s);
+	}
 	
-	public Interface(){
+	public void getAnswers(){
+		read = new answerGetter();
+		read.start();
+	}
+
+	public void disconnect() throws IOException{
+		saida.close();
+		entrada.close();
+		server.close();
+		client.close();
+	}
+
+	// Construtor
+	public Interface() throws Exception{
+		// Comunicacao
+		endTest = false;
+		//client = new Socket("192.168.182.91", 9669);
+		client = new Socket("127.0.0.1", 9669);
+		entrada = new Scanner(System.in);
+		saida = new PrintStream(client.getOutputStream());
+		server = new Scanner(client.getInputStream());
 		super("Teste");
 		
+		// Interface
 		this.setVisible(true);
 		setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -52,6 +110,7 @@ public class Interface extends JFrame implements ActionListener{
 		pack();
 	}
 	
+	// Funcoes de interface
 	private JComponent getWelcomeLayout(){
 		output = new JTextField("Digite Usuario e Senha");
 		output.setEditable(false);
@@ -123,6 +182,32 @@ public class Interface extends JFrame implements ActionListener{
 	public static void main(String[] args) throws Exception{
 		Interface oi = new Interface();
 	}
+	/*
+	public static void main(String[] args) throws Exception{
+		TestClient tc = new TestClient();
+		tc.getAnswers();
+		String testCommand = "login";
+		tc.sendCommand(testCommand);
+		testCommand = "12345";
+		tc.sendCommand(testCommand);
+		testCommand = "senha";
+		tc.sendCommand(testCommand);
+		testCommand = "open";
+		tc.sendCommand(testCommand);
+		testCommand = "teste";
+		tc.sendCommand(testCommand);
+		testCommand = "disconnect";
+		tc.sendCommand(testCommand);
+//		String input = EntradaTeclado.leString();
+//		while(!input.equals("sair")){
+//			tc.sendCommand(input);
+//		}
+		while(tc.endTest){
+		}
+//		tc.disconnect();
+	}
+	*/
+	
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
