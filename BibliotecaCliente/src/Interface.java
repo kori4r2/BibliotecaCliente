@@ -30,11 +30,11 @@ public class Interface extends JFrame implements ActionListener{
 		this.setVisible(true);
 		setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setSize(20, 20);
+		this.setPreferredSize(new Dimension(20, 20));
 		
 		pane = this.getContentPane();
 		pane.setLayout(new BorderLayout(30, 30));
-		pane.setSize(200, 200);
+		pane.setPreferredSize(new Dimension(200, 200));
 		
 		
 		pane.add(getWelcomeLayout(), BorderLayout.NORTH);
@@ -67,7 +67,7 @@ public class Interface extends JFrame implements ActionListener{
 	private JComponent getUserPassLayout(){
 		userPass = new JPanel();
 		userPass.setLayout(new GridLayout(1,2));
-		userPass.setSize(80, 20);
+		userPass.setPreferredSize(new Dimension(80, 20));
 		
 		userPass.add(getUsuarioLayout());
 		userPass.add(getSenhaLayout());
@@ -78,11 +78,11 @@ public class Interface extends JFrame implements ActionListener{
 	private JComponent getUsuarioLayout(){
 		usuario2 = new JTextField("Usuario:");
 		usuario2.setEditable(false);
-		usuario2.setSize(20, 10);
+		usuario2.setPreferredSize(new Dimension(20, 10));
 		
 		usuario = new JTextField();
 		usuario.setEditable(true);
-		usuario.setSize(20, 10);
+		usuario.setPreferredSize(new Dimension(20, 10));
 		
 		userPanel = new JPanel();
 		userPanel.setLayout(new GridLayout(1,2));
@@ -96,11 +96,11 @@ public class Interface extends JFrame implements ActionListener{
 	private JComponent getSenhaLayout(){
 		senha2 = new JTextField("Senha:");
 		senha2.setEditable(false);
-		senha2.setSize(20, 10);
+		senha2.setPreferredSize(new Dimension(20, 10));
 		
 		senha = new JTextField();
 		senha.setEditable(true);
-		senha.setSize(20,10);
+		senha.setPreferredSize(new Dimension(20,10));
 		
 		senhaPanel = new JPanel();
 		senhaPanel.setLayout(new GridLayout(1,2));
@@ -132,7 +132,6 @@ public class Interface extends JFrame implements ActionListener{
 		pane.setVisible(false);
 		pane.add(botao);
 		botao.setPreferredSize(new Dimension(400, 400));
-//		pane.setSize(400, 400);
 		pack();
 		pane.setVisible(true);
 	}
