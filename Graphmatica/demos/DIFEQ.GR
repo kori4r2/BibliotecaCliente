@@ -1,0 +1,22 @@
+[saved-setup]
+[labels]
+title=Sample Differential Equation Approximations
+left=slope-field
+right=Runge-Kutta
+
+[grid]
+left=-6.4930
+right=7.7890
+top=2.3250
+bottom=auto
+
+[options]
+detail=axes
+labels=on
+
+[equations]
+dx = cos t + sin x {-6, -1} ' Runge-Kutta IV approx for same ODE
+dx = cos t + sin x {-6, -.5} ' R-K approx, different IV
+dx = cos t + sin x {-6, -.25} ' R-K approx, different IV
+dx = cos t + sin x {-6, -.35} ' R-K approx, different IV
+dx = cos t + sin x ' slope-field approximation

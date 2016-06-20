@@ -1,0 +1,51 @@
+[saved-setup]
+[labels]
+title=Graphmatica demo featuring parametric equations
+[annotations]
+x0 = 2.981
+y0 = -1.37
+text0 = or, you can use real text!
+x1 = 3.5
+y1 = -2.814
+text1 = See the Annotate feature
+x2 = 3.5
+y2 = -3.61
+text2 = in the Labels menu
+
+[grid]
+left=-11.2
+right=19.5
+top=5.701
+bottom=auto
+
+[options]
+detail=none
+axes=1792
+legends=off
+
+[equations]
+x=2cos(t)-9; y=3sin(t)+2 {0.5p, 2p} ' G
+y=2 {-9, -7} ' G
+x=-6; y=2+t {-3,0} ' r
+x=cos(-t)-5; y=sin(-t)+1 {-1p, 0} ' r
+x=cos(t)-2.5; y=1.5sin(t)+0.5 {0, 2p} ' a
+x=-1.5; y=2-t {1.5, 3} ' a
+x=-.5; y=2-t {0,5} ' p
+x=cos(-t)+.5; y=1.5sin(-t)+0.5 {-1p, 1p} ' p
+x=2; y=2-t {-3, 3} ' h
+x=cos(-t)+3; y=sin(-t)+1 {-1p, 0} ' h
+x=4; y=2-t {1, 3} ' h
+x=5; y=2-t {0, 3} ' m
+x=cos(-t)+6; y=sin(-t)+1 {-1p, 0} ' m
+x=7; y=2-t {1, 3} ' m
+x=cos(-t)+8; y=sin(-t)+1 {-1p, 0} ' m
+x=9; y=2-t {1, 3} ' m
+x=cos(t)+10.5; y=1.5sin(t)+0.5 {0, 2p} ' a
+x=11.5; y=2-t {1.5, 3} ' a
+x=12.5; y=2-t {-2.5, 3} ' t
+y=3.7 {11.5,13.5} ' t
+x=14; y=2-t {0, 3} ' i
+x=.2cos(t)+14; y=.2sin(t)+2.5 {0, 2p} ' i
+x=cos(t)+15.5; y=1.5sin(t)+0.5 {30d, 330d} ' c
+x=cos(t)+18; y=1.5sin(t)+0.5 {0, 2p} ' a
+x=19; y=2-t {1.5, 3} ' a

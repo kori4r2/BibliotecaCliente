@@ -1,0 +1,23 @@
+[saved-setup]
+[labels]
+title=Common trigonometric functions
+left=sin cos tan
+right=csc sec cot
+
+[grid]
+left=-9.4603
+right=8.6984
+top=auto
+bottom=auto
+
+[options]
+paper=trig
+labels=on
+
+[equations]
+y=csc x {0, 2p} ' cosecant over 0-2pi
+y=sin x {0, 2p} ' sine wave over 0-2pi
+y=tan x {-1.5p, -.5p} ' tangent
+y=cot x {-3p, -2p} ' cotangent
+y=sec x {0, 2p} ' one segment of secant
+y=cos x {0, 2p} ' cosine over 0-2pi

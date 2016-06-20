@@ -1,0 +1,55 @@
+﻿[saved-setup]
+charset=UTF-8
+
+[labels]
+xaxis=x
+yaxis=y
+
+[annotations]
+x0 = 5.254
+y0 = 3.954
+text0 = y=√x-2
+x1 = 4.637
+y1 = -1.144
+text1 = y=cos(x-π/2)
+x2 = 2.968
+y2 = -2.893
+text2 = x²+y²≤16
+
+[grid]
+left=-9
+right=9
+top=auto
+bottom=auto
+
+[options]
+detail=grid
+axes=1808
+
+[functions]
+x₀=1.234
+α=2.4
+halfπ=π/2
+
+[equations]
+y=√x+2
+x²+y²≤16
+y=Σ(1/2^n) {n:0, 1, 4}
+y=Γ x
+y=cos(x+45°)
+r=2θ
+y=2×cos x
+y=cos(x-π/2)
+y=sin x
+
+[eqcolors]
+eq0=3
+eq1=1
+eq2=7
+eq3=4
+eq4=3
+eq5=5
+eq6=4
+eq7=2
+eq8=1
+next=2

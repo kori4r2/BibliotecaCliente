@@ -1,0 +1,29 @@
+[saved-setup]
+[labels]
+title=Implicit Functions
+xaxis=x
+yaxis=y
+
+[grid]
+left=-8
+right=8
+top=auto
+bottom=auto
+
+[options]
+detail=grid
+axes=1808
+labels=on
+
+[functions]
+
+[equations]
+x^2-xy+y^2=10
+x^2 - 3y cos(x) +y^2 = 7
+x^2 + 3xy +y^2 = 6
+
+[eqcolors]
+eq0=2
+eq1=1
+eq2=4
+next=3

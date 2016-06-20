@@ -1,0 +1,23 @@
+[saved-setup]
+[labels]
+title=Some interesting inequalities
+[annotations]
+x0 = -0.7650
+y0 = -2.4005
+text0 = Inequalities!
+
+[grid]
+left=-8.0000
+right=8.0000
+top=auto
+bottom=auto
+
+[options]
+detail=dots
+
+[equations]
+y >= (x+5)^2
+y > (x+3)^2 + 1
+x^2 + (y-1)^2 < 4
+xy > 4
+y < x -6
