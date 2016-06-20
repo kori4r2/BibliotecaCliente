@@ -15,7 +15,9 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 
 
 public class Interface extends JFrame implements ActionListener{
@@ -39,6 +41,8 @@ public class Interface extends JFrame implements ActionListener{
 	private JTextField senha;
 	private JTextField senha2;
 	private JTextField senha3;
+	
+	private JScrollPane scroll;
 
 
 	// ----------------------------Construtor--------------------------------
@@ -62,14 +66,12 @@ public class Interface extends JFrame implements ActionListener{
 		pane.setLayout(new BorderLayout(30, 30));
 		
 		
-		pane.add(getWelcomeLayout(), BorderLayout.NORTH);
+		pane.add(getWelcomeLayout("Digite Usuario e Senha"), BorderLayout.NORTH);
 		
 		pane.add(getUserPassLayout(), BorderLayout.CENTER);
 		pane.add(this.getButtonPanel(), BorderLayout.SOUTH);
 		
-		//JScrollPane scroll = new JScrollPane(output);
-		//scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		//scroll.setPreferredSize(new Dimension(600, 400));
+		
 		
 		pack();
 	}
@@ -78,8 +80,8 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------------
 	//---------------------WelcomeLayout-----------------------------
 	//-----------------------------------------------------------------------
-	private JComponent getWelcomeLayout(){
-		output = new JTextField("Digite Usuario e Senha");
+	private JComponent getWelcomeLayout(String msg){
+		output = new JTextField(msg);
 		output.setEditable(false);
 		
 		welcome = new JPanel();
@@ -89,30 +91,7 @@ public class Interface extends JFrame implements ActionListener{
 		
 		return welcome;
 	}
-	
-	private JComponent getWelcome2Layout(){
-		output = new JTextField("Crie Usuario e Senha");
-		output.setEditable(false);
-		
-		welcome = new JPanel();
-		welcome.setLayout(new FlowLayout(FlowLayout.CENTER));
-		
-		welcome.add(output);
-		
-		return welcome;
-	}
-	
-	private JComponent getWelcome3Layout(){
-		output = new JTextField("Usuario ou Senha Incompativel");
-		output.setEditable(false);
-		
-		welcome = new JPanel();
-		welcome.setLayout(new FlowLayout(FlowLayout.CENTER));
-		
-		welcome.add(output);
-		
-		return welcome;
-	}
+
 //-----------------------------------------------------------------------
 //---------------------UserPassLayout-----------------------------
 //-----------------------------------------------------------------------
@@ -130,7 +109,6 @@ public class Interface extends JFrame implements ActionListener{
 	private JComponent getUserPassLayout2(){
 		userPass = new JPanel();
 		userPass.setLayout(new GridLayout(1,3));
-		//userPass.setPreferredSize(new Dimension(200, 20));
 		
 		userPass.add(getUsuarioLayout());
 		userPass.add(getSenhaLayout());
@@ -209,7 +187,11 @@ public class Interface extends JFrame implements ActionListener{
 		but2 = new JButton(new AbstractAction("Login"){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				//metodo
+				pane.setVisible(false);
+				pane.remove(welcome);
+				pane.remove(userPass);
+				pane.remove(botao);
+				userScreen("9277896");
 			}
 		});
 		
@@ -230,7 +212,7 @@ public class Interface extends JFrame implements ActionListener{
 				pane.remove(welcome);
 				pane.remove(userPass);
 				pane.remove(botao);
-				pane.add(getWelcomeLayout(), BorderLayout.NORTH);
+				pane.add(getWelcomeLayout("Digite Usuario e Senha"), BorderLayout.NORTH);
 				pane.add(getUserPassLayout(), BorderLayout.CENTER);
 				pane.add(getButtonPanel(), BorderLayout.SOUTH);
 				pack();
@@ -244,14 +226,18 @@ public class Interface extends JFrame implements ActionListener{
 			public void actionPerformed(ActionEvent e){
 				if(senha.getText().equals(senha3.getText())==true && 
 						senha.getText().isEmpty()==false && usuario.getText().isEmpty()==false){
+					//if(senha corresponde)create and enter
+						pane.setVisible(false);
+						pane.remove(welcome);
+						pane.remove(userPass);
+						pane.remove(botao);
+					//else ...
 					
-					
-					//create and enter
 				}
 				else{
 					pane.setVisible(false);
 					pane.remove(welcome);
-					pane.add(getWelcome3Layout(), BorderLayout.NORTH);
+					pane.add(getWelcomeLayout("Usuario ou Senha Incompativel"), BorderLayout.NORTH);
 					pack();
 					pane.setVisible(true);
 				}
@@ -277,13 +263,28 @@ public class Interface extends JFrame implements ActionListener{
 		pane.remove(welcome);
 		pane.remove(userPass);
 		pane.remove(botao);
-		pane.add(getWelcome2Layout(), BorderLayout.NORTH);
+		pane.add(getWelcomeLayout("Crie Usuario e Senha"), BorderLayout.NORTH);
 		pane.add(getUserPassLayout2(), BorderLayout.CENTER);
 		pane.add(getButton2Panel(), BorderLayout.SOUTH);
 		//botao.setPreferredSize(new Dimension(50, 20));
 		pack();
 		pane.setVisible(true);
 	}
+	
+	//------------------------------------------------------------------
+	//--------------------------------Tela do Usuario-----------------
+	//------------------------------------------------------------------
+	
+	public void userScreen(String ID){
+		pane.add(getWelcomeLayout("ID: " + ID), BorderLayout.NORTH);
+		scroll = new JScrollPane();
+		scroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scroll.setPreferredSize(new Dimension(600, 400));
+		pane.add(scroll, BorderLayout.WEST);
+		pane.setVisible(true);
+		pack();
+	}
+	
 	//------------------------------------------------------------------------
 	//-----------------------------------------------------------------------
 	//---------------------Threads-----------------------------
