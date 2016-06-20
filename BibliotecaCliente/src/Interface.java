@@ -238,6 +238,7 @@ public class Interface extends JFrame implements ActionListener{
 			}
 		});
 		
+		
 		but2 = new JButton(new AbstractAction("Create"){
 			@Override
 			public void actionPerformed(ActionEvent e){
