@@ -204,7 +204,7 @@ public class Interface extends JFrame implements ActionListener{
 			public void actionPerformed(ActionEvent e){
 				if(usuario.getText().isEmpty() == false && senha.getPassword()
 						!=null
-						/* && usuario e senha são compatíveis*/){
+						/* && usuario e senha sao compativeis*/){
 					senha.resetKeyboardActions();
 					pane.setVisible(false);
 					pane.remove(welcome);
