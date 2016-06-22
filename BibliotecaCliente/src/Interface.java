@@ -2,6 +2,7 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
@@ -38,10 +39,19 @@ public class Interface extends JFrame implements ActionListener{
 	
 	private JButton[] emprestimoBut;
 	private JButton[] uploadBut;
-	private JButton but;
-	private JButton but2;
 	private JButton emp;
 	private JButton upl;
+	
+	private JButton but;
+	private JButton but2;
+	
+
+	private JButton returnUser;
+	private JButton returnLogin;
+	private JButton newEmprestimos;
+	
+	private JButton nextPDF;
+	private JButton backPDF;
 	
 	private Container pane;
 	private JPanel botao;
@@ -53,19 +63,30 @@ public class Interface extends JFrame implements ActionListener{
 	private JPanel userPass;
 	private JPanel welcome;
 	private JPanel usrScrn;
+	
+	private JPanel sulPDF;
+	
 	private JPanel emprestimos;
 	private JPanel emprestimosScreen;
+	private JPanel emprestimosSouthLayout;
+	
 	private JPanel uploads;
 	private JPanel uploadsScreen;
+	private JPanel uploadsSouthLayout;
 	
 	private JTextField usuario2;
 	private JTextField usuario;
+	
+	private JTextField pdfTotalPages;
+	private JTextField pdfCurrentPage;
 	
 	private JPasswordField senha;
 	private JTextField senha2;
 	private JPasswordField senha3;
 	
 	private JScrollPane scroll;
+	
+	private ImagePanel scr;
 
 
 	// ----------------------------Construtor--------------------------------
@@ -101,6 +122,37 @@ public class Interface extends JFrame implements ActionListener{
 	}
 	
 	// Funcoes de interface
+	
+	
+	//-----------------------------------------------------------------------
+	//---------------------Imagem-----------------------------
+	//-----------------------------------------------------------------------
+	
+	protected class ImagePanel extends JPanel{
+		private BufferedImage image;
+		
+		
+		@Override
+		protected void  paintComponent(Graphics g){
+			super.paintComponent(g);
+			g.drawImage(image, 0, 0, null);
+		}
+		
+		@Override
+		public Dimension getPreferredSize(){
+			return (new Dimension(image.getWidth(), image.getHeight()));
+		}
+		
+		public int getImageWidth(){
+			// Italo: ajeita depois que integrar
+			return (image == null)? 500 : image.getWidth();
+		}
+		public void updateImage(BufferedImage newImage){
+			image = newImage;
+			paintComponent(image.getGraphics());
+		}
+	}
+	
 	//-----------------------------------------------------------------------
 	//---------------------WelcomeLayout-----------------------------
 	//-----------------------------------------------------------------------
@@ -116,6 +168,93 @@ public class Interface extends JFrame implements ActionListener{
 		return welcome;
 	}
 
+//-----------------------------------------------------------------------
+//---------------------PdfLayout-----------------------------
+//-----------------------------------------------------------------------	
+	protected void pdfLayout(){
+		pane.setVisible(false);
+		pane.removeAll();
+		
+		pane.add(getButtonReturnUser(), BorderLayout.NORTH);
+		scr = new ImagePanel();
+	
+		BufferedImage aux = null;
+		try{
+			//Italo: pegar a imagem
+			aux = ImageIO.read(new File("C:/Users/9277896/git/BibliotecaCliente/BibliotecaCliente/g.jpg"));
+		}catch(Exception e){
+			System.out.println("deu ruim");
+		}
+		scr.updateImage(aux);
+		
+		scroll = new JScrollPane(scr,
+		        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
+		        JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		int maxWidth = 1200;
+		int width = (scr.getImageWidth() > maxWidth)? maxWidth : scr.getImageWidth();
+		scroll.setPreferredSize(new Dimension(width, 600));
+		scroll.setViewportView(scr);
+			
+		add(scroll);
+	
+		
+		pane.add(scroll, BorderLayout.WEST);
+		pane.add(pdfSulLayout(), BorderLayout.SOUTH);
+		pack();
+		
+		pane.setVisible(true);
+	}
+	
+	
+	protected JComponent pdfSulLayout(){
+		
+		sulPDF = new JPanel();
+		sulPDF.setLayout(new GridLayout(1, 4));
+		
+		nextPDF = new JButton(new AbstractAction(">"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				//Italo: manda mensagem e recarrega imagem
+				//sendCommand("next");
+				//waitForResponse();
+				//BufferedImage img = getImage();
+				//scr.updateImage(img);
+				//responseProcessed();
+				backToUser();
+			}
+		});
+		
+		backPDF = new JButton(new AbstractAction("<"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				//Italo: manda mensagem e recarrega imagem
+				//sendCommand("back");
+				backToUser();
+			}
+		});
+		
+		pdfCurrentPage = new JTextField("01");
+		pdfCurrentPage.setEditable(true);
+		pdfCurrentPage.addActionListener(new ActionListener() {
+		      public void actionPerformed(ActionEvent e) {
+		    	  backToUser();
+		    	  //Italo: Go to this page Integer.ParseInt(pdfCurrentPage)
+		    	  //Italo: Atualiza Imagem
+		      }
+		});
+		
+		pdfTotalPages = new JTextField("/ " + /*Italo: receber quantidade de paginas*/"200");
+		pdfTotalPages.setEditable(false);
+		
+		sulPDF.add(backPDF);
+		sulPDF.add(pdfCurrentPage);
+		sulPDF.add(pdfTotalPages);
+		sulPDF.add(nextPDF);
+			
+		return sulPDF;
+	}
+	
 //-----------------------------------------------------------------------
 //---------------------UserPassLayout-----------------------------
 //-----------------------------------------------------------------------
@@ -202,6 +341,34 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------------
 	//---------------------ButtonPanel-----------------------------
 	//-----------------------------------------------------------------------
+	protected JComponent getButtonReturnUser(){
+		returnUser = new JButton(new AbstractAction("Return"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				backToUser();
+			}
+		});
+		return returnUser;
+	}
+	
+	protected JComponent getButtonNewEmprestimo(){
+		returnUser = new JButton(new AbstractAction("New"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				pane.setVisible(false);
+				pane.removeAll();
+				acervoEmprestimosScreen(getAcervoEmprestimos());
+			}
+		});
+		return returnUser;
+	}
+	
+	private void backToUser(){
+		pane.setVisible(false);
+		pane.removeAll();
+		userScreen(usuario.getText());
+	}
+	
 	protected JComponent getButtonPanel(){
 		botao = new JPanel();
 		botao.setLayout(new GridLayout(1,2));
@@ -284,6 +451,7 @@ public class Interface extends JFrame implements ActionListener{
 		
 		return botao;
 	}
+
 	
 	public static void main(String[] args) throws Exception{
 		Interface oi = new Interface();
@@ -310,26 +478,34 @@ public class Interface extends JFrame implements ActionListener{
 	private void uploadsScreen(){
 		pane.add(getWelcomeLayout("Lista de Uploads"), BorderLayout.NORTH);
 			
-		pane.add(uploadsScreenLayout(), BorderLayout.SOUTH);
+		String[] frango = new String[100];
+		for(int i=0; i<100; i++){
+			frango[i] = "teste " + i;
+		}	
+		
+		pane.add(uploadsScreenLayout(frango), BorderLayout.WEST);
+		
+		pane.add(getButtonReturnUser(), BorderLayout.SOUTH);
 		pane.setVisible(true);
 		pack();
 	}
 		
-	private JComponent uploadsScreenLayout(){
+	private JComponent uploadsScreenLayout(String[] frango){
 		pane.removeAll();
 		pane.setVisible(false);
 		uploadsScreen = new JPanel();
 		uploadsScreen.setLayout(new FlowLayout());
 			
 		uploads = new JPanel();
-		uploads.setLayout(new GridLayout(20, 1));
+		uploads.setLayout(new GridLayout(frango.length, 1));
 
-		uploadBut = new JButton[20];
-		for(int i=0; i<20; i+=1){
-			uploadBut[i] = new JButton(new AbstractAction("teste " + i){
+		uploadBut = new JButton[frango.length];
+		for(int i=0; i<frango.length; i+=1){
+			uploadBut[i] = new JButton(new AbstractAction(frango[i]){
 				@Override
 				public void actionPerformed(ActionEvent e){
-					pane.setVisible(false);
+					backToUser();
+					//Italo: envia comando de remocao upload
 				}
 			});
 			uploadBut[i].setBounds(20, 5, 89, 23);
@@ -354,26 +530,93 @@ public class Interface extends JFrame implements ActionListener{
 	private void emprestimosScreen(){
 		pane.setVisible(false);
 		pane.removeAll();
+		
+		emprestimosSouthLayout = new JPanel();
+		emprestimosSouthLayout.setLayout(new GridLayout(1,2));
+		
 		pane.add(getWelcomeLayout("Lista de Emprestimos"), BorderLayout.NORTH);
 		
-		pane.add(emprestimosScreenLayout(), BorderLayout.SOUTH);
+		String[] frango = new String[100];
+		for(int i=0; i<100; i++){
+			frango[i] = "teste " + i;
+		}
+		pane.add(emprestimosScreenLayout(frango), BorderLayout.WEST);
+		
+		emprestimosSouthLayout.add(getButtonReturnUser());
+		emprestimosSouthLayout.add(getButtonNewEmprestimo());
+		
+		pane.add(emprestimosSouthLayout, BorderLayout.SOUTH);
+		
 		pane.setVisible(true);
 		pack();
 	}
 	
-	private JComponent emprestimosScreenLayout(){		
+	private JComponent emprestimosScreenLayout(String[] livros){		
 		emprestimosScreen = new JPanel();
 		emprestimosScreen.setLayout(new FlowLayout());
 		
 		emprestimos = new JPanel();
-		emprestimos.setLayout(new GridLayout(20, 1));
+		emprestimos.setLayout(new GridLayout(livros.length, 1));
 
-		emprestimoBut = new JButton[20];
-		for(int i=0; i<20; i+=1){
-			emprestimoBut[i] = new JButton(new AbstractAction("teste " + i){
+		emprestimoBut = new JButton[livros.length];
+		for(int i=0; i<livros.length; i+=1){
+			emprestimoBut[i] = new JButton(new AbstractAction(livros[i]){
 				@Override
 				public void actionPerformed(ActionEvent e){
-					pane.setVisible(false);
+					//Italo: soh chama a funcao se o servidor conseguir abrir, caso
+					//contrario Erro
+					pdfLayout();
+
+				}
+			});
+			emprestimoBut[i].setBounds(20, 5, 89, 23);
+			emprestimos.add(emprestimoBut[i]);
+		}
+		
+		emprestimosScreen.add(emprestimos);
+		
+		scroll = new JScrollPane(emprestimos,
+		        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
+		        JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		scroll.setPreferredSize(new Dimension(1000, 200));
+		scroll.setViewportView(emprestimos);
+		
+		add(scroll);
+		return emprestimosScreen;
+	}
+	
+	
+	private void acervoEmprestimosScreen(String[] teste){
+		pane.setVisible(false);
+		pane.removeAll();
+		
+		emprestimosSouthLayout = new JPanel();
+		emprestimosSouthLayout.setLayout(new GridLayout(1,2));
+		
+		pane.add(getWelcomeLayout("Lista de Emprestimos"), BorderLayout.NORTH);
+		
+		pane.add(acervoEmprestimosScreenLayout(teste), BorderLayout.WEST);
+		
+		pane.add(getButtonReturnUser(), BorderLayout.SOUTH);
+		
+		pane.setVisible(true);
+		pack();
+	}
+	
+	private JComponent acervoEmprestimosScreenLayout(String[] livros){		
+		emprestimosScreen = new JPanel();
+		emprestimosScreen.setLayout(new FlowLayout());
+		
+		emprestimos = new JPanel();
+		emprestimos.setLayout(new GridLayout(livros.length, 1));
+
+		emprestimoBut = new JButton[livros.length];
+		for(int i=0; i<livros.length; i+=1){
+			emprestimoBut[i] = new JButton(new AbstractAction(livros[i]){
+				@Override
+				public void actionPerformed(ActionEvent e){
+					//Italo: enviar o comando de novo emprestimo
+					backToUser();
 				}
 			});
 			emprestimoBut[i].setBounds(20, 5, 89, 23);
@@ -546,6 +789,14 @@ public class Interface extends JFrame implements ActionListener{
 		BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
 		System.out.println("Image Received");
 		return image;
+	}
+	
+	private String[] getAcervoEmprestimos(){
+		String[] teste = new String[10];
+		for(int i=0; i<10; i++){
+			teste[i] = "teste " + i;
+		}	
+		return teste;
 	}
 	
 	private void getAnswers(){
