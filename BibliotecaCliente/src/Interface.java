@@ -1,4 +1,7 @@
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -113,8 +116,7 @@ public class Interface extends JFrame implements ActionListener{
 		waitForResponse();
 		// Caso o servidor esteja pronto
 		if(lastLine.equals("ready")){
-			// Processa a resposta e envia o arquivo
-			responseProcessed();
+			// Envia o arquivo
 			OutputStream outStream = (OutputStream)saida;
 
 			// Se o arquivo for grande a ponto de causar erro na alocacao de memoria, avisa o usuario
@@ -130,6 +132,8 @@ public class Interface extends JFrame implements ActionListener{
 			outStream.write(byteArray, 0, fileSize);
 			// Envia mensagem avisando que o upload acabou
 			sendCommand("uploaded");
+			// Processa a resposta
+			responseProcessed();
 			// Espera resposta do servidor
 			waitForResponse();
 		}else{
@@ -690,9 +694,10 @@ public class Interface extends JFrame implements ActionListener{
 						}catch(Exception e4){
 							sendCommand("error");
 						}
+					}else{
+						waitForResponse();
+						responseProcessed();
 					}
-					waitForResponse();
-					responseProcessed();
 					backToUser();
 				}else{
 					backToUser();
