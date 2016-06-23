@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.Vector;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
@@ -36,6 +37,15 @@ import javax.swing.ScrollPaneConstants;
 
 public class Interface extends JFrame implements ActionListener{
 	public int quantEmprestimos;
+
+	private abstract class SpecialAction extends AbstractAction{
+		public final int pos;
+
+		public SpecialAction(String s, int i){
+			super(s);
+			pos = i;
+		}
+	}
 	
 	private JButton[] emprestimoBut;
 	private JButton[] uploadBut;
@@ -100,14 +110,16 @@ public class Interface extends JFrame implements ActionListener{
 	public Interface() throws Exception{
 		super("Teste");
 		// Comunicacao
-		/*
 		//socket = new Socket("192.168.182.91", 9669);
 		socket = new Socket("127.0.0.1", 9669);
 		saida = new PrintStream(socket.getOutputStream());
 		entrada = new Scanner(socket.getInputStream());
 		commandReceived = false;
-		*/
-		
+		getAnswers();
+
+		waitForResponse();
+		responseProcessed();
+
 		// Interface
 		quantEmprestimos = 0;
 		this.setVisible(true);
@@ -185,14 +197,22 @@ public class Interface extends JFrame implements ActionListener{
 		pane.add(getButtonReturnUser(), BorderLayout.NORTH);
 		scr = new ImagePanel();
 	
-		BufferedImage aux = null;
+		BufferedImage img = null;
+		// Italo: Pega a imagem do servidor
 		try{
-			//Italo: pegar a imagem
-			aux = ImageIO.read(new File("C:/Users/vini/git/BibliotecaCliente/BibliotecaCliente/g.jpg"));
+			img = getImage();
 		}catch(Exception e){
-			System.out.println("deu ruim");
+			// Avisa que houve erro
+			sendCommand("error");
+			responseProcessed();
+			// Processa a mensagem de erro
+			waitForResponse();
+			responseProcessed();
+			// Volta para a tela inicial
+			backToUser();
+			return;
 		}
-		scr.updateImage(aux);
+		scr.updateImage(img);
 		
 		scroll = new JScrollPane(scr,
 		        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
@@ -222,36 +242,133 @@ public class Interface extends JFrame implements ActionListener{
 		nextPDF = new JButton(new AbstractAction(">"){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				//Italo: manda mensagem e recarrega imagem
-				//sendCommand("next");
-				//waitForResponse();
-				//BufferedImage img = getImage();
-				//scr.updateImage(img);
-				//responseProcessed();
-				backToUser();
+				BufferedImage img = null;
+				sendCommand("next");
+				waitForResponse();
+				if(lastLine.equals("sending")){
+					try{
+						img = getImage();
+					}catch(Exception e1){
+						// Avisa que houve erro
+						sendCommand("error");
+						responseProcessed();
+						// Processa a mensagem de erro
+						waitForResponse();
+						responseProcessed();
+						// Volta para a tela inicial
+						backToUser();
+						return;
+					}
+					scr.updateImage(img);
+				}else{
+					// Se der erro antes que o usuario fique pronto para enviara imagem
+					responseProcessed();
+					// volta para a tela inicial
+					backToUser();
+					return;
+				}
+				scr.updateImage(img);
+				responseProcessed();
+				waitForResponse();
+				if(lastLine.equals("error")){
+					// Se houver erro, volta para a tela inicial
+					backToUser();
+					responseProcessed();
+				}else{
+					responseProcessed();
+				}
 			}
 		});
 		
 		backPDF = new JButton(new AbstractAction("<"){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				//Italo: manda mensagem e recarrega imagem
-				//sendCommand("back");
-				backToUser();
+				BufferedImage img = null;
+				sendCommand("back");
+				waitForResponse();
+				if(lastLine.equals("sending")){
+					try{
+						img = getImage();
+					}catch(Exception e2){
+						// Avisa que houve erro
+						sendCommand("error");
+						responseProcessed();
+						// Processa a mensagem de erro
+						waitForResponse();
+						responseProcessed();
+						// Volta para a tela inicial
+						backToUser();
+						return;
+					}
+					scr.updateImage(img);
+				}else{
+					// Se der erro antes que o usuario fique pronto para enviara imagem
+					responseProcessed();
+					// volta para a tela inicial
+					backToUser();
+					return;
+				}
+				scr.updateImage(img);
+				responseProcessed();
+				waitForResponse();
+				if(lastLine.equals("error")){
+					// Se houver erro, volta para a tela inicial
+					backToUser();
+					responseProcessed();
+				}else{
+					responseProcessed();
+				}
 			}
 		});
 		
-		pdfCurrentPage = new JTextField("01");
+		waitForResponse();
+		pdfCurrentPage = new JTextField(lastLine);
+		responseProcessed();
 		pdfCurrentPage.setEditable(true);
 		pdfCurrentPage.addActionListener(new ActionListener() {
-		      public void actionPerformed(ActionEvent e) {
-		    	  backToUser();
-		    	  //Italo: Go to this page Integer.ParseInt(pdfCurrentPage)
-		    	  //Italo: Atualiza Imagem
-		      }
+			public void actionPerformed(ActionEvent e) {
+				BufferedImage img = null;
+				sendCommand("choice");
+				sendCommand(pdfCurrentPage.getText());
+				waitForResponse();
+				if(lastLine.equals("sending")){
+					try{
+						img = getImage();
+					}catch(Exception e3){
+						// Avisa que houve erro
+						sendCommand("error");
+						responseProcessed();
+						// Processa a mensagem de erro
+						waitForResponse();
+						responseProcessed();
+						// Volta para a tela inicial
+						backToUser();
+						return;
+					}
+					scr.updateImage(img);
+				}else{
+					// Se der erro antes que o usuario fique pronto para enviara imagem
+					responseProcessed();
+					// volta para a tela inicial
+					backToUser();
+					return;
+				}
+				scr.updateImage(img);
+				responseProcessed();
+				waitForResponse();
+				if(lastLine.equals("error")){
+					// Se houver erro, volta para a tela inicial
+					backToUser();
+					responseProcessed();
+				}else{
+					responseProcessed();
+				}
+			}
 		});
 		
-		pdfTotalPages = new JTextField("/ " + /*Italo: receber quantidade de paginas*/"200");
+		waitForResponse();
+		pdfTotalPages = new JTextField("/ " + lastLine);
+		responseProcessed();
 		pdfTotalPages.setEditable(false);
 		
 		sulPDF.add(backPDF);
@@ -352,9 +469,23 @@ public class Interface extends JFrame implements ActionListener{
 		sendUpload = new JButton(new AbstractAction("Send Upload"){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				if(nomeULivro != null && nomeUPdf != null){
+				if(nomeULivro2.getText() != null && nomeUPdf2.getText() != null){
 					//Italo: Envia as duas strings e espera a resposta
+					sendCommand("upload");
+					sendCommand(nomeULivro2.getText());
+					sendCommand(nomeUPdf2.getText());
+					waitForResponse();
 					//Italo: Checa se o arquivo existe
+					if(lastLine.equals("upload")){
+						responseProcessed();
+						try{
+							sendFile("../clientPDFs/" + nomeUPdf2.getText());
+						}catch(Exception e4){
+							sendCommand("error");
+						}
+					}
+					waitForResponse();
+					responseProcessed();
 					backToUser();
 				}else{
 					backToUser();
@@ -412,15 +543,27 @@ public class Interface extends JFrame implements ActionListener{
 		but2 = new JButton(new AbstractAction("Login"){
 			@Override
 			public void actionPerformed(ActionEvent e){
-				if(usuario.getText().isEmpty() == false && senha.getPassword()
-						!=null
+				if(usuario.getText().isEmpty() == false && senha.getPassword() != null
 						/* && usuario e senha sao compativeis*/){
-					senha.resetKeyboardActions();
-					pane.setVisible(false);
-					pane.remove(welcome);
-					pane.remove(userPass);
-					pane.remove(botao);
-					userScreen(usuario.getText());
+					sendCommand("login");
+					sendCommand(usuario.getText());
+					sendCommand(new String(senha.getPassword()));
+					waitForResponse();
+					if(lastLine.equals("success")){
+						responseProcessed();
+						senha.resetKeyboardActions();
+						pane.setVisible(false);
+						pane.remove(welcome);
+						pane.remove(userPass);
+						pane.remove(botao);
+						userScreen(usuario.getText());
+					}else{
+						responseProcessed();
+						pane.remove(welcome);
+						pane.setVisible(false);
+						pane.setVisible(true);
+						pane.add(getWelcomeLayout("Usuario ou Senha Incorretos"));
+					}
 				}else{
 					pane.remove(welcome);
 					pane.setVisible(false);
@@ -461,14 +604,27 @@ public class Interface extends JFrame implements ActionListener{
 			public void actionPerformed(ActionEvent e){
 				if(Arrays.equals(senha.getPassword(),senha3.getPassword())==true &&
 						senha.getPassword()!=null && usuario.getText().isEmpty()==false){
-					//if(senha corresponde)create and enter
-						senha3.resetKeyboardActions();
-						pane.setVisible(false);
-						userScreen(usuario.getText());
-					//else ...
-					
-				}
-				else{
+
+						sendCommand("newUser");
+						sendCommand(usuario.getText());
+						sendCommand(new String(senha.getPassword()));
+						System.out.println(lastLine + "1");
+						waitForResponse();
+						System.out.println(lastLine + "2");
+						if(lastLine.equals("success")){
+							responseProcessed();
+							senha3.resetKeyboardActions();
+							pane.setVisible(false);
+							userScreen(usuario.getText());
+						}else{
+							responseProcessed();
+							pane.setVisible(false);
+							pane.remove(welcome);
+							pane.add(getWelcomeLayout("Usuario ou Senha Incompativel"), BorderLayout.NORTH);
+							pack();
+							pane.setVisible(true);
+						}
+				}else{
 					pane.setVisible(false);
 					pane.remove(welcome);
 					pane.add(getWelcomeLayout("Usuario ou Senha Incompativel"), BorderLayout.NORTH);
@@ -553,18 +709,13 @@ public class Interface extends JFrame implements ActionListener{
 		pane.setVisible(true);
 	}
 	
-	private void uploadsScreen(){
+	private void uploadsScreen(String[] frango){
 		pane.add(getWelcomeLayout("Lista de Uploads"), BorderLayout.NORTH);
 		
 		uploadsSouthLayout = new JPanel();
 		uploadsSouthLayout.setLayout(new GridLayout(1,2));
 		uploadsSouthLayout.add(getButtonReturnUser());
 		uploadsSouthLayout.add(getButtonNewUpload());
-			
-		String[] frango = new String[100];
-		for(int i=0; i<100; i++){
-			frango[i] = "teste " + i;
-		}	
 		
 		pane.add(uploadsScreenLayout(frango), BorderLayout.WEST);
 		
@@ -584,11 +735,15 @@ public class Interface extends JFrame implements ActionListener{
 
 		uploadBut = new JButton[frango.length];
 		for(int i=0; i<frango.length; i+=1){
-			uploadBut[i] = new JButton(new AbstractAction(frango[i]){
+			uploadBut[i] = new JButton(new SpecialAction(frango[i], i){
 				@Override
 				public void actionPerformed(ActionEvent e){
+					sendCommand("rmvUpload");
+					sendCommand(uploadBut[pos].getText());
+					waitForResponse();
+					// Poderia checar o tipo de erro e exibir
+					responseProcessed();
 					backToUser();
-					//Italo: envia comando de remocao upload
 				}
 			});
 			uploadBut[i].setBounds(20, 5, 89, 23);
@@ -610,7 +765,7 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------
 	//--------------------------------Tela de Emprestimos-----------
 	//----------------------------------------------------------------
-	private void emprestimosScreen(){
+	private void emprestimosScreen(String[] frango){
 		pane.setVisible(false);
 		pane.removeAll();
 		
@@ -618,11 +773,6 @@ public class Interface extends JFrame implements ActionListener{
 		emprestimosSouthLayout.setLayout(new GridLayout(1,2));
 		
 		pane.add(getWelcomeLayout("Lista de Emprestimos"), BorderLayout.NORTH);
-		
-		String[] frango = new String[100];
-		for(int i=0; i<100; i++){
-			frango[i] = "teste " + i;
-		}
 		pane.add(emprestimosScreenLayout(frango), BorderLayout.WEST);
 		
 		emprestimosSouthLayout.add(getButtonReturnUser());
@@ -643,12 +793,20 @@ public class Interface extends JFrame implements ActionListener{
 
 		emprestimoBut = new JButton[livros.length];
 		for(int i=0; i<livros.length; i+=1){
-			emprestimoBut[i] = new JButton(new AbstractAction(livros[i]){
+			emprestimoBut[i] = new JButton(new SpecialAction(livros[i], i){
 				@Override
 				public void actionPerformed(ActionEvent e){
 					//Italo: soh chama a funcao se o servidor conseguir abrir, caso
 					//contrario Erro
-					pdfLayout();
+					sendCommand("open");
+					sendCommand(emprestimoBut[pos].getText());
+					waitForResponse();
+					if(lastLine.equals("reading")){
+						pdfLayout();
+					}else{
+						responseProcessed();
+						backToUser();
+					}
 
 				}
 			});
@@ -695,11 +853,28 @@ public class Interface extends JFrame implements ActionListener{
 
 		emprestimoBut = new JButton[livros.length];
 		for(int i=0; i<livros.length; i+=1){
-			emprestimoBut[i] = new JButton(new AbstractAction(livros[i]){
+			emprestimoBut[i] = new JButton(new SpecialAction(livros[i], i){
 				@Override
 				public void actionPerformed(ActionEvent e){
 					//Italo: enviar o comando de novo emprestimo
-					backToUser();
+					String[] bookStatus = emprestimoBut[pos].getText().split(" ");
+					String title = bookStatus[0];
+					int stock = -1;
+					try{
+						stock = Integer.parseInt(bookStatus[1]);
+					}catch(NumberFormatException e5){
+						backToUser();
+					}
+					// Se nao houver um livro o botao nao faz nada
+					// Pode fazer com que seja necessario recarregar a lista
+					if(stock > 0){
+						sendCommand("newLoan");
+						sendCommand(title);
+						waitForResponse();
+						// Poderia avaliar se houve erro e exibir mensagem de erro
+						responseProcessed();
+						backToUser();
+					}
 				}
 			});
 			emprestimoBut[i].setBounds(20, 5, 89, 23);
@@ -735,7 +910,7 @@ public class Interface extends JFrame implements ActionListener{
 				pane.remove(upl);
 				pane.remove(emp);
 				
-				emprestimosScreen();
+				emprestimosScreen(getUsuarioEmprestimos());
 			}
 		});
 		
@@ -749,7 +924,7 @@ public class Interface extends JFrame implements ActionListener{
 				pane.remove(upl);
 				pane.remove(emp);
 				
-				uploadsScreen();
+				uploadsScreen(getUsuarioUploads());
 			}
 		});
 		
@@ -779,16 +954,18 @@ public class Interface extends JFrame implements ActionListener{
 			try{
 				while(entrada.hasNextLine()){
 					lastLine = entrada.nextLine();
-					System.out.println(lastLine);
+					System.out.println("command " + lastLine + " received");
 					if(lastLine.equals("disconnect")){
 						disconnect();
 						return;
 					}
-					//System.out.println(lastLine);
 					commandReceived = true;
 					commandProcessed = false;
+					int i = 0;
 					while(!commandProcessed){
+						i++;
 					}
+					System.out.println("command " + lastLine + " processed");
 				}
 			}catch(Exception e){
 			}
@@ -796,11 +973,11 @@ public class Interface extends JFrame implements ActionListener{
 	}
 
 
-	private Socket socket;
-	private PrintStream saida;
-	private Scanner entrada;
+	private volatile Socket socket;
+	private volatile PrintStream saida;
+	private volatile Scanner entrada;
 	private volatile String lastLine;
-	private answerGetter read;
+	private volatile answerGetter read;
 	private volatile boolean commandReceived;
 	private volatile boolean commandProcessed;
 
@@ -810,7 +987,9 @@ public class Interface extends JFrame implements ActionListener{
 	}
 
 	private void waitForResponse(){
+		int i = 0;
 		while(!commandReceived){
+			i++;
 		}
 	}
 
@@ -822,45 +1001,47 @@ public class Interface extends JFrame implements ActionListener{
 	private void sendFile(String filepath) throws Exception{
 		File file = null;
 		Path pdfpath = null;
-		try{
-			file = new File(filepath);
-			pdfpath = Paths.get(filepath);
-		}catch(Exception e){
+		file = new File(filepath);
+		if(!file.exists() || file.isDirectory()){
 			System.out.println("Nome de arquivo invalido (" + filepath + ")");
-			return;
+			throw new Exception("invalid file");
 		}
-		saida.println("upload");
-		String[] aux = filepath.split("/");
-		saida.println(aux[aux.length - 1]);
+		pdfpath = Paths.get(filepath);
+		sendCommand("sending");
+		waitForResponse();
 
-		while(!commandReceived){
-		}
-		commandReceived = false;
-		commandProcessed = true;
-
-		if(lastLine.equals("upload")){
+		if(lastLine.equals("ready")){
+			responseProcessed();
 			OutputStream outStream = (OutputStream)saida;
 
 			if(file.length() > Integer.MAX_VALUE)
 				System.out.println("file is too big");
 			int fileSize = (int)file.length();
-//			System.out.println("File size in bytes = " + fileSize);
+			System.out.println("File size in bytes = " + fileSize);
 			byte[] size = ByteBuffer.allocate(4).putInt(fileSize).array();
 
 			byte[] byteArray = Files.readAllBytes(pdfpath);
-//			System.out.println("array size = " + byteArray.length);
+			System.out.println("array size = " + byteArray.length);
 
 			outStream.write(size);
 			outStream.write(byteArray, 0, fileSize);
-			outStream.flush();
-			saida.println("uploaded");
+//			outStream.flush();
+			sendCommand("uploaded");
+			waitForResponse();
+		}else{
+			responseProcessed();
+			return;
 		}
+		responseProcessed();
 	}
 
 
 	private BufferedImage getImage() throws Exception{
 		System.out.println("Receiving image...");
 		InputStream inStream = socket.getInputStream();
+
+		// Avisa que o usuario esta pronto para receber a imagem
+		sendCommand("ready");
 		byte[] sizeAr = new byte[4];
 		inStream.read(sizeAr);
 		int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
@@ -871,15 +1052,55 @@ public class Interface extends JFrame implements ActionListener{
 		}
 		BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
 		System.out.println("Image Received");
+		responseProcessed();
+		waitForResponse();
+		if(lastLine.equals("error"))
+			throw new Exception("erro no envio da imagem (server side)");
+		responseProcessed();
 		return image;
+	}
+
+	private String[] getUsuarioEmprestimos(){
+		sendCommand("loanList");
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
 	}
 	
 	private String[] getAcervoEmprestimos(){
-		String[] teste = new String[10];
-		for(int i=0; i<10; i++){
-			teste[i] = "teste " + i;
-		}	
-		return teste;
+		// Italo: recebe a lista de livros no acervo
+		sendCommand("fullList");
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
+	}
+
+	private String[] getUsuarioUploads(){
+		sendCommand("uploadList");
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
 	}
 	
 	private void getAnswers(){
@@ -892,58 +1113,4 @@ public class Interface extends JFrame implements ActionListener{
 		entrada.close();
 		socket.close();
 	}
-	
-	
-	/*
-	public static void main(String[] args) throws Exception{
-		TestClient tc = new TestClient();
-		tc.getAnswers();
-		while(!tc.commandReceived){
-		}
-		tc.commandReceived = false;
-		tc.commandProcessed = true;
-
-		String testCommand = "login";
-		tc.sendCommand(testCommand);
-		testCommand = "12345";
-		tc.sendCommand(testCommand);
-		testCommand = "senha";
-		tc.sendCommand(testCommand);
-		while(!tc.commandReceived){
-		}
-		tc.commandReceived = false;
-		tc.commandProcessed = true;
-
-		testCommand = "open";
-		tc.sendCommand(testCommand);
-		testCommand = "teste";
-		tc.sendCommand(testCommand);
-		while(!tc.commandReceived){
-		}
-		if(tc.lastLine.equals("reading")){
-			// receber imagem
-			BufferedImage image = tc.getImage();
-			File outFile = new File("../testImage/test.png");
-			ImageIO.write(image, "png", outFile);
-			// escrever num arquivo pra testar
-		}
-		tc.commandReceived = false;
-		tc.commandProcessed = true;
-
-		tc.sendFile("../testPDF/Interface.pdf");
-		while(!tc.commandReceived){
-		}
-		tc.commandReceived = false;
-		tc.commandProcessed = true;
-
-		testCommand = "disconnect";
-		tc.sendCommand(testCommand);
-//		String input = EntradaTeclado.leString();
-//		while(!input.equals("sair")){
-//			tc.sendCommand(input);
-//		}
-//		tc.disconnect();
-	}
-	*/
-	
 }
