@@ -4,7 +4,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.GridLayout;
-import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -32,7 +31,6 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.ScrollPaneConstants;
 
 
 public class Interface extends JFrame implements ActionListener{
@@ -57,7 +55,6 @@ public class Interface extends JFrame implements ActionListener{
 	
 
 	private JButton returnUser;
-	private JButton returnLogin;
 	private JButton newUpload;
 	private JButton sendUpload;
 	
@@ -84,7 +81,6 @@ public class Interface extends JFrame implements ActionListener{
 	private JPanel uploads;
 	private JPanel uploadsScreen;
 	private JPanel uploadsSouthLayout;
-	private JPanel panelNewUpload;
 	
 	private JTextField usuario2;
 	private JTextField usuario;
