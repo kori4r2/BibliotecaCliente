@@ -48,7 +48,8 @@ public class Interface extends JFrame implements ActionListener{
 
 	private JButton returnUser;
 	private JButton returnLogin;
-	private JButton newEmprestimos;
+	private JButton newUpload;
+	private JButton sendUpload;
 	
 	private JButton nextPDF;
 	private JButton backPDF;
@@ -73,12 +74,18 @@ public class Interface extends JFrame implements ActionListener{
 	private JPanel uploads;
 	private JPanel uploadsScreen;
 	private JPanel uploadsSouthLayout;
+	private JPanel panelNewUpload;
 	
 	private JTextField usuario2;
 	private JTextField usuario;
 	
 	private JTextField pdfTotalPages;
 	private JTextField pdfCurrentPage;
+	
+	private JTextField nomeULivro;
+	private JTextField nomeUPdf;
+	private JTextField nomeULivro2;
+	private JTextField nomeUPdf2;
 	
 	private JPasswordField senha;
 	private JTextField senha2;
@@ -181,7 +188,7 @@ public class Interface extends JFrame implements ActionListener{
 		BufferedImage aux = null;
 		try{
 			//Italo: pegar a imagem
-			aux = ImageIO.read(new File("C:/Users/9277896/git/BibliotecaCliente/BibliotecaCliente/g.jpg"));
+			aux = ImageIO.read(new File("C:/Users/vini/git/BibliotecaCliente/BibliotecaCliente/g.jpg"));
 		}catch(Exception e){
 			System.out.println("deu ruim");
 		}
@@ -341,6 +348,32 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------------
 	//---------------------ButtonPanel-----------------------------
 	//-----------------------------------------------------------------------
+	protected JComponent getButtonSendUpload(){
+		sendUpload = new JButton(new AbstractAction("Send Upload"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				if(nomeULivro != null && nomeUPdf != null){
+					//Italo: Envia as duas strings e espera a resposta
+					//Italo: Checa se o arquivo existe
+					backToUser();
+				}else{
+					backToUser();
+				}
+			}
+		});
+		return sendUpload;
+	}
+	
+	protected JComponent getButtonNewUpload(){
+		newUpload = new JButton(new AbstractAction("New"){
+			@Override
+			public void actionPerformed(ActionEvent e){
+				newUploadScreen();
+			}
+		});
+		return newUpload;
+	}
+	
 	protected JComponent getButtonReturnUser(){
 		returnUser = new JButton(new AbstractAction("Return"){
 			@Override
@@ -475,8 +508,58 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------
 	//--------------------------------Tela de Uploads-----------
 	//----------------------------------------------------------------
+	private JComponent inicializeNomeU(){
+		nomeULivro = new JTextField("Nome do Livro: ");
+		nomeULivro.setEditable(false);
+		nomeULivro.setPreferredSize(new Dimension(80, 40));
+		
+		nomeULivro2 = new JTextField();
+		nomeULivro2.setEditable(true);
+		nomeULivro2.setPreferredSize(new Dimension(80, 40));
+		
+		nomeUPdf = new JTextField("Nome do PDF: ");
+		nomeUPdf.setEditable(false);
+		nomeUPdf.setPreferredSize(new Dimension(80, 40));
+		
+		nomeUPdf2 = new JTextField();
+		nomeUPdf2.setEditable(true);
+		nomeUPdf2.setPreferredSize(new Dimension(80, 40));
+		
+		userPanel = new JPanel();
+		userPanel.setLayout(new GridLayout(2,2));
+		
+		userPanel.add(nomeUPdf);
+		userPanel.add(nomeUPdf2);
+		userPanel.add(nomeULivro);
+		userPanel.add(nomeULivro2);
+		
+		return userPanel;
+	}
+	
+	private void newUploadScreen(){
+		pane.setVisible(false);
+		pane.removeAll();
+		
+		
+		uploadsSouthLayout = new JPanel();
+		uploadsSouthLayout.setLayout(new GridLayout(1,2));
+		uploadsSouthLayout.add(getButtonSendUpload());
+		uploadsSouthLayout.add(getButtonReturnUser());
+		
+		
+		pane.add(uploadsSouthLayout, BorderLayout.SOUTH);
+		pane.add(inicializeNomeU(), BorderLayout.CENTER);
+		pack();
+		pane.setVisible(true);
+	}
+	
 	private void uploadsScreen(){
 		pane.add(getWelcomeLayout("Lista de Uploads"), BorderLayout.NORTH);
+		
+		uploadsSouthLayout = new JPanel();
+		uploadsSouthLayout.setLayout(new GridLayout(1,2));
+		uploadsSouthLayout.add(getButtonReturnUser());
+		uploadsSouthLayout.add(getButtonNewUpload());
 			
 		String[] frango = new String[100];
 		for(int i=0; i<100; i++){
@@ -485,7 +568,7 @@ public class Interface extends JFrame implements ActionListener{
 		
 		pane.add(uploadsScreenLayout(frango), BorderLayout.WEST);
 		
-		pane.add(getButtonReturnUser(), BorderLayout.SOUTH);
+		pane.add(uploadsSouthLayout, BorderLayout.SOUTH);
 		pane.setVisible(true);
 		pack();
 	}
