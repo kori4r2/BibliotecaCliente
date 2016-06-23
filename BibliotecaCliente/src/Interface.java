@@ -1,13 +1,4 @@
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.GridLayout;
-import java.awt.SystemColor;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,8 +27,227 @@ import javax.swing.ScrollPaneConstants;
 
 
 public class Interface extends JFrame implements ActionListener{
-	public int quantEmprestimos;
+	//------------------------------------------------------------------------
+	//-----------------------------------------------------------------------
+	//---------------------Comunicacao--------------------------------------
+	//-----------------------------------------------------------------------
+	//------------------------------------------------------------------------
 
+	// Thread que roda em paralelo recebendo as mensagens do servidor
+	private class AnswerGetter extends Thread{
+		public void run(){
+			String answer = new String("");
+			try{
+				// Enquanto estiver conectado
+				while(entrada.hasNextLine()){
+					// Recebe a proxima linha do servidor
+					lastLine = entrada.nextLine();
+					// Exibe na tela a mensagem recebida
+					System.out.println("command " + lastLine + " received");
+					// Se a mensagem for a de desconectar, faz isso e retorna
+					if(lastLine.equals("disconnect")){
+						disconnect();
+						return;
+					}
+					// Seta as flags relativas a mensagem
+					commandReceived = true;
+					commandProcessed = false;
+					int i = 0;
+					// Espera que a mensagem seja processada na thread principal
+					while(!commandProcessed){
+						// Possivel utilizar a variavel para indicar grandes tempos de espera
+						i++;
+					}
+					// Exibe na tela que o comando foi processado
+					System.out.println("command " + lastLine + " processed");
+				}
+			}catch(Exception e){
+			}
+		}
+	}
+
+
+	// As variaveis sao declaradas como volatile para evitar conflito com a thread em paralelo
+	private volatile Socket socket;
+	private volatile PrintStream saida;
+	private volatile Scanner entrada;
+	// A string lastLine contem o ultimo comando recebido do servidor
+	private volatile String lastLine;
+	private volatile AnswerGetter read;
+	private volatile boolean commandReceived;
+	private volatile boolean commandProcessed;
+
+	// Envia uma string para o servidor
+	private void sendCommand(String s){
+		saida.println(s);
+	}
+
+	// Espera pela resposta do servidor
+	private void waitForResponse(){
+		int i = 0;
+		while(!commandReceived){
+			i++;
+		}
+	}
+
+	// Indica que a ultima resposta foi processada
+	private void responseProcessed(){
+		commandProcessed = true;
+		commandReceived = false;
+	}
+
+	// Funcao que envia um arquivo para o servidor
+	private void sendFile(String filepath) throws Exception{
+		File file = null;
+		Path pdfpath = null;
+		file = new File(filepath);
+		// Verifica se o arquivo existe
+		if(!file.exists() || file.isDirectory()){
+			// Caso nao exista, exibe mensagem correspondende e da throw em excecao
+			System.out.println("Nome de arquivo invalido (" + filepath + ")");
+			throw new Exception("invalid file");
+		}
+		pdfpath = Paths.get(filepath);
+		// Avisa o servidor que vai comecar a enviar
+		sendCommand("sending");
+		// Espera a resposta do servidor
+		waitForResponse();
+		// Caso o servidor esteja pronto
+		if(lastLine.equals("ready")){
+			// Processa a resposta e envia o arquivo
+			responseProcessed();
+			OutputStream outStream = (OutputStream)saida;
+
+			// Se o arquivo for grande a ponto de causar erro na alocacao de memoria, avisa o usuario
+			if(file.length() > Integer.MAX_VALUE)
+				System.out.println("file is too big");
+			// Obtem o tamanho do arquivo e os seus bytes
+			int fileSize = (int)file.length();
+			byte[] size = ByteBuffer.allocate(4).putInt(fileSize).array();
+			byte[] byteArray = Files.readAllBytes(pdfpath);
+
+			// Envia o tamanho do arquivo e seus bytes para o servidor
+			outStream.write(size);
+			outStream.write(byteArray, 0, fileSize);
+			// Envia mensagem avisando que o upload acabou
+			sendCommand("uploaded");
+			// Espera resposta do servidor
+			waitForResponse();
+		}else{
+			// Caso haja erro no servidor, processa a mensagem e sai da funcao
+			responseProcessed();
+			return;
+		}
+		// Processa a resposta do servidor
+		responseProcessed();
+	}
+
+
+	// Metodo que regebe uma imagem do servidor e retorna o BufferedImage correspondente
+	private BufferedImage getImage() throws Exception{
+		System.out.println("Receiving image...");
+		InputStream inStream = socket.getInputStream();
+
+		// Avisa que o usuario esta pronto para receber a imagem
+		sendCommand("ready");
+		// Recebe o tamanho da imagem
+		byte[] sizeAr = new byte[4];
+		inStream.read(sizeAr);
+		int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
+		// Recebe os bytes da imagem
+		byte[] imageAr = new byte[size];
+		int bytesRead = 0;
+		// O loop garante que a imagem chega com o tamanho total
+		while(bytesRead < size){
+			bytesRead += inStream.read(imageAr, bytesRead, size-bytesRead);
+		}
+		// Converte os bytes para uma BufferedImage
+		BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
+		// Processa o ultimo comando
+		responseProcessed();
+		// Espera pela resposta do servidor
+		waitForResponse();
+		// Caso haja erro, avisa e da throw na excecao
+		if(lastLine.equals("error")){
+			System.out.println("Error receiving image");
+			throw new Exception("erro no envio da imagem (server side)");
+		}
+		// Exibe que a imagem foi recebida
+		System.out.println("Image Received");
+		// Processa o comando e retorna a imagem
+		responseProcessed();
+		return image;
+	}
+
+	// Recebe a lista de emprestimos do usuario atual
+	private String[] getUsuarioEmprestimos(){
+		// Envia o pedido para o servidor
+		sendCommand("loanList");
+		// list armazena todas as linhas de resposta
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		// A string finished indica o fim da lista
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
+	}
+	
+	// Similar ao metodo acima, mas com a lista completa de livros do acervo
+	private String[] getAcervoEmprestimos(){
+		sendCommand("fullList");
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
+	}
+
+	// Similar aos metodos acima mas com a lista de uploads do usuario atual
+	private String[] getUsuarioUploads(){
+		sendCommand("uploadList");
+		Vector<String> list = new Vector<String>(0, 1);
+		waitForResponse();
+		while(!lastLine.equals("finished")){
+			list.add(lastLine);
+			responseProcessed();
+			waitForResponse();
+		}
+		responseProcessed();
+
+		return list.toArray(new String[list.size()]);
+	}
+	
+	// Comeca a rodar a thread para recepcao de mensagens do servidor
+	private void getAnswers(){
+		read = new AnswerGetter();
+		read.start();
+	}
+
+	// Disconecta tudo
+	private void disconnect() throws IOException{
+		saida.close();
+		entrada.close();
+		socket.close();
+	}
+
+	//------------------------------------------------------------------------
+	//-----------------------------------------------------------------------
+	//---------------------Interface---------------------------------------
+	//-----------------------------------------------------------------------
+	//------------------------------------------------------------------------
+
+
+	// Classe auxiliar para permitir a criacao de botoes dentro de um loop for
 	private abstract class SpecialAction extends AbstractAction{
 		public final int pos;
 
@@ -110,18 +320,20 @@ public class Interface extends JFrame implements ActionListener{
 	public Interface() throws Exception{
 		super("Teste");
 		// Comunicacao
-		//socket = new Socket("192.168.182.91", 9669);
+		// Conecta com o servidor
 		socket = new Socket("127.0.0.1", 9669);
+		// Obtem entrada e saida
 		saida = new PrintStream(socket.getOutputStream());
 		entrada = new Scanner(socket.getInputStream());
+		// Inicializa o receptor de mensagens
 		commandReceived = false;
 		getAnswers();
 
+		// Processa a mensagem de conexao bem sucedida
 		waitForResponse();
 		responseProcessed();
 
 		// Interface
-		quantEmprestimos = 0;
 		this.setVisible(true);
 		setResizable(false);
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -946,179 +1158,4 @@ public class Interface extends JFrame implements ActionListener{
 		pack();
 	}
 	
-	//------------------------------------------------------------------------
-	//-----------------------------------------------------------------------
-	//---------------------Threads-----------------------------
-	//-----------------------------------------------------------------------
-	//------------------------------------------------------------------------
-
-	private class AnswerGetter extends Thread{
-		public void run(){
-			String answer = new String("");
-			try{
-				while(entrada.hasNextLine()){
-					lastLine = entrada.nextLine();
-					System.out.println("command " + lastLine + " received");
-					if(lastLine.equals("disconnect")){
-						disconnect();
-						return;
-					}
-					commandReceived = true;
-					commandProcessed = false;
-					int i = 0;
-					while(!commandProcessed){
-						i++;
-					}
-					System.out.println("command " + lastLine + " processed");
-				}
-			}catch(Exception e){
-			}
-		}
-	}
-
-
-	private volatile Socket socket;
-	private volatile PrintStream saida;
-	private volatile Scanner entrada;
-	private volatile String lastLine;
-	private volatile AnswerGetter read;
-	private volatile boolean commandReceived;
-	private volatile boolean commandProcessed;
-
-	// Envia uma string para o servidor
-	private void sendCommand(String s){
-		saida.println(s);
-	}
-
-	private void waitForResponse(){
-		int i = 0;
-		while(!commandReceived){
-			i++;
-		}
-	}
-
-	private void responseProcessed(){
-		commandProcessed = true;
-		commandReceived = false;
-	}
-
-	private void sendFile(String filepath) throws Exception{
-		File file = null;
-		Path pdfpath = null;
-		file = new File(filepath);
-		if(!file.exists() || file.isDirectory()){
-			System.out.println("Nome de arquivo invalido (" + filepath + ")");
-			throw new Exception("invalid file");
-		}
-		pdfpath = Paths.get(filepath);
-		sendCommand("sending");
-		waitForResponse();
-
-		if(lastLine.equals("ready")){
-			responseProcessed();
-			OutputStream outStream = (OutputStream)saida;
-
-			if(file.length() > Integer.MAX_VALUE)
-				System.out.println("file is too big");
-			int fileSize = (int)file.length();
-			System.out.println("File size in bytes = " + fileSize);
-			byte[] size = ByteBuffer.allocate(4).putInt(fileSize).array();
-
-			byte[] byteArray = Files.readAllBytes(pdfpath);
-			System.out.println("array size = " + byteArray.length);
-
-			outStream.write(size);
-			outStream.write(byteArray, 0, fileSize);
-//			outStream.flush();
-			sendCommand("uploaded");
-			waitForResponse();
-		}else{
-			responseProcessed();
-			return;
-		}
-		responseProcessed();
-	}
-
-
-	private BufferedImage getImage() throws Exception{
-		System.out.println("Receiving image...");
-		InputStream inStream = socket.getInputStream();
-
-		// Avisa que o usuario esta pronto para receber a imagem
-		sendCommand("ready");
-		byte[] sizeAr = new byte[4];
-		inStream.read(sizeAr);
-		int size = ByteBuffer.wrap(sizeAr).asIntBuffer().get();
-		byte[] imageAr = new byte[size];
-		int bytesRead = 0;
-		while(bytesRead < size){
-			bytesRead += inStream.read(imageAr, bytesRead, size-bytesRead);
-		}
-		BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageAr));
-		System.out.println("Image Received");
-		responseProcessed();
-		waitForResponse();
-		if(lastLine.equals("error")){
-			System.out.println("?");
-			throw new Exception("erro no envio da imagem (server side)");
-		}
-		System.out.println("a");
-		responseProcessed();
-		System.out.println("b");
-		return image;
-	}
-
-	private String[] getUsuarioEmprestimos(){
-		sendCommand("loanList");
-		Vector<String> list = new Vector<String>(0, 1);
-		waitForResponse();
-		while(!lastLine.equals("finished")){
-			list.add(lastLine);
-			responseProcessed();
-			waitForResponse();
-		}
-		responseProcessed();
-
-		return list.toArray(new String[list.size()]);
-	}
-	
-	private String[] getAcervoEmprestimos(){
-		// Italo: recebe a lista de livros no acervo
-		sendCommand("fullList");
-		Vector<String> list = new Vector<String>(0, 1);
-		waitForResponse();
-		while(!lastLine.equals("finished")){
-			list.add(lastLine);
-			responseProcessed();
-			waitForResponse();
-		}
-		responseProcessed();
-
-		return list.toArray(new String[list.size()]);
-	}
-
-	private String[] getUsuarioUploads(){
-		sendCommand("uploadList");
-		Vector<String> list = new Vector<String>(0, 1);
-		waitForResponse();
-		while(!lastLine.equals("finished")){
-			list.add(lastLine);
-			responseProcessed();
-			waitForResponse();
-		}
-		responseProcessed();
-
-		return list.toArray(new String[list.size()]);
-	}
-	
-	private void getAnswers(){
-		read = new AnswerGetter();
-		read.start();
-	}
-
-	private void disconnect() throws IOException{
-		saida.close();
-		entrada.close();
-		socket.close();
-	}
 }
