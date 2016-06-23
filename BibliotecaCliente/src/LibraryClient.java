@@ -26,9 +26,10 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JOptionPane;
 
 
-public class Interface extends JFrame implements ActionListener{
+public class LibraryClient extends JFrame implements ActionListener{
 	//------------------------------------------------------------------------
 	//-----------------------------------------------------------------------
 	//---------------------Comunicacao--------------------------------------
@@ -318,7 +319,7 @@ public class Interface extends JFrame implements ActionListener{
 
 
 	// ----------------------------Construtor--------------------------------
-	public Interface() throws Exception{
+	public LibraryClient() throws Exception{
 		super("Teste");
 		// Comunicacao
 		// Conecta com o servidor
@@ -376,7 +377,6 @@ public class Interface extends JFrame implements ActionListener{
 		}
 		
 		public int getImageWidth(){
-			// Italo: ajeita depois que integrar
 			return (image == null)? 500 : image.getWidth();
 		}
 
@@ -681,12 +681,10 @@ public class Interface extends JFrame implements ActionListener{
 			@Override
 			public void actionPerformed(ActionEvent e){
 				if(nomeULivro2.getText() != null && nomeUPdf2.getText() != null){
-					//Italo: Envia as duas strings e espera a resposta
 					sendCommand("upload");
 					sendCommand(nomeULivro2.getText());
 					sendCommand(nomeUPdf2.getText());
 					waitForResponse();
-					//Italo: Checa se o arquivo existe
 					if(lastLine.equals("upload")){
 						responseProcessed();
 						try{
@@ -861,7 +859,7 @@ public class Interface extends JFrame implements ActionListener{
 
 	
 	public static void main(String[] args) throws Exception{
-		Interface oi = new Interface();
+		LibraryClient oi = new LibraryClient();
 	}
 
 	
@@ -1014,15 +1012,28 @@ public class Interface extends JFrame implements ActionListener{
 			emprestimoBut[i] = new JButton(new SpecialAction(livros[i], i){
 				@Override
 				public void actionPerformed(ActionEvent e){
-					//Italo: soh chama a funcao se o servidor conseguir abrir, caso
-					//contrario Erro
-					sendCommand("open");
-					sendCommand(emprestimoBut[pos].getText());
-					waitForResponse();
-					if(lastLine.equals("reading")){
-						pdfLayout();
-					}else{
+					String[] options = {"Ler", "Devolver"};
+					int result = JOptionPane.showOptionDialog(null,
+								new String("Deseja ler ou devolver o livro?"), new String("Opcoes"),
+								JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,
+								null, options, new String("Ler"));
+					if(result == 0){
+						sendCommand("open");
+						sendCommand(emprestimoBut[pos].getText());
+						waitForResponse();
+						if(lastLine.equals("reading")){
+							pdfLayout();
+						}else{
+							responseProcessed();
+							backToUser();
+						}
+					}else if(result == 1){
+						sendCommand("returnBook");
+						sendCommand(emprestimoBut[pos].getText());
+						waitForResponse();
 						responseProcessed();
+						backToUser();
+					}else if(result == JOptionPane.CLOSED_OPTION){
 						backToUser();
 					}
 
@@ -1074,8 +1085,12 @@ public class Interface extends JFrame implements ActionListener{
 			emprestimoBut[i] = new JButton(new SpecialAction(livros[i], i){
 				@Override
 				public void actionPerformed(ActionEvent e){
-					//Italo: enviar o comando de novo emprestimo
-					String[] bookStatus = emprestimoBut[pos].getText().split(" ");
+					String[] bookStatus = emprestimoBut[pos].getText().split(" => ");
+					System.out.println("--------------");
+					for(String s : bookStatus){
+						System.out.println(s);
+					}
+					System.out.println("--------------");
 					String title = bookStatus[0];
 					int stock = -1;
 					try{
