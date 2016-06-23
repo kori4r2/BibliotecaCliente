@@ -154,7 +154,7 @@ public class Interface extends JFrame implements ActionListener{
 		@Override
 		protected void  paintComponent(Graphics g){
 			super.paintComponent(g);
-			g.drawImage(image, 0, 0, null);
+			g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
 		}
 		
 		@Override
@@ -166,9 +166,10 @@ public class Interface extends JFrame implements ActionListener{
 			// Italo: ajeita depois que integrar
 			return (image == null)? 500 : image.getWidth();
 		}
+
 		public void updateImage(BufferedImage newImage){
 			image = newImage;
-			paintComponent(image.getGraphics());
+			repaint();
 		}
 	}
 	
@@ -198,7 +199,7 @@ public class Interface extends JFrame implements ActionListener{
 		scr = new ImagePanel();
 	
 		BufferedImage img = null;
-		// Italo: Pega a imagem do servidor
+		// Pega a imagem do servidor
 		try{
 			img = getImage();
 		}catch(Exception e){
@@ -267,14 +268,13 @@ public class Interface extends JFrame implements ActionListener{
 					backToUser();
 					return;
 				}
-				scr.updateImage(img);
-				responseProcessed();
 				waitForResponse();
 				if(lastLine.equals("error")){
 					// Se houver erro, volta para a tela inicial
 					backToUser();
 					responseProcessed();
 				}else{
+					pdfCurrentPage.setText(lastLine);
 					responseProcessed();
 				}
 			}
@@ -284,7 +284,7 @@ public class Interface extends JFrame implements ActionListener{
 			@Override
 			public void actionPerformed(ActionEvent e){
 				BufferedImage img = null;
-				sendCommand("back");
+				sendCommand("previous");
 				waitForResponse();
 				if(lastLine.equals("sending")){
 					try{
@@ -308,14 +308,13 @@ public class Interface extends JFrame implements ActionListener{
 					backToUser();
 					return;
 				}
-				scr.updateImage(img);
-				responseProcessed();
 				waitForResponse();
 				if(lastLine.equals("error")){
 					// Se houver erro, volta para a tela inicial
 					backToUser();
 					responseProcessed();
 				}else{
+					pdfCurrentPage.setText(lastLine);
 					responseProcessed();
 				}
 			}
@@ -347,20 +346,19 @@ public class Interface extends JFrame implements ActionListener{
 					}
 					scr.updateImage(img);
 				}else{
-					// Se der erro antes que o usuario fique pronto para enviara imagem
+					// Se der erro antes que o usuario fique pronto para enviar a imagem
 					responseProcessed();
 					// volta para a tela inicial
 					backToUser();
 					return;
 				}
-				scr.updateImage(img);
-				responseProcessed();
 				waitForResponse();
 				if(lastLine.equals("error")){
 					// Se houver erro, volta para a tela inicial
-					backToUser();
 					responseProcessed();
+					backToUser();
 				}else{
+					pdfCurrentPage.setText(lastLine);
 					responseProcessed();
 				}
 			}
@@ -509,6 +507,12 @@ public class Interface extends JFrame implements ActionListener{
 		returnUser = new JButton(new AbstractAction("Return"){
 			@Override
 			public void actionPerformed(ActionEvent e){
+				if(scr != null){
+					sendCommand("close");
+					waitForResponse();
+					responseProcessed();
+					scr = null;
+				}
 				backToUser();
 			}
 		});
@@ -948,7 +952,7 @@ public class Interface extends JFrame implements ActionListener{
 	//-----------------------------------------------------------------------
 	//------------------------------------------------------------------------
 
-	private class answerGetter extends Thread{
+	private class AnswerGetter extends Thread{
 		public void run(){
 			String answer = new String("");
 			try{
@@ -977,7 +981,7 @@ public class Interface extends JFrame implements ActionListener{
 	private volatile PrintStream saida;
 	private volatile Scanner entrada;
 	private volatile String lastLine;
-	private volatile answerGetter read;
+	private volatile AnswerGetter read;
 	private volatile boolean commandReceived;
 	private volatile boolean commandProcessed;
 
@@ -1054,9 +1058,13 @@ public class Interface extends JFrame implements ActionListener{
 		System.out.println("Image Received");
 		responseProcessed();
 		waitForResponse();
-		if(lastLine.equals("error"))
+		if(lastLine.equals("error")){
+			System.out.println("?");
 			throw new Exception("erro no envio da imagem (server side)");
+		}
+		System.out.println("a");
 		responseProcessed();
+		System.out.println("b");
 		return image;
 	}
 
@@ -1104,7 +1112,7 @@ public class Interface extends JFrame implements ActionListener{
 	}
 	
 	private void getAnswers(){
-		read = new answerGetter();
+		read = new AnswerGetter();
 		read.start();
 	}
 
