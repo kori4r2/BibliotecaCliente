@@ -775,10 +775,11 @@ public class LibraryClient extends JFrame implements ActionListener{
 						userScreen(usuario.getText());
 					}else{
 						responseProcessed();
-						pane.remove(welcome);
 						pane.setVisible(false);
+						pane.remove(welcome);
+						pane.add(getWelcomeLayout("Usuario ou Senha Incompativel"), BorderLayout.NORTH);
+						pack();
 						pane.setVisible(true);
-						pane.add(getWelcomeLayout("Usuario ou Senha Incorretos"));
 					}
 				}else{
 					pane.remove(welcome);
